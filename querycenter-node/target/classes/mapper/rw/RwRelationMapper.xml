@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.ruku.RwRelationDao">
+    <update id="updateZqrl">
+      UPDATE ST_ZQRL_B
+      SET Z=#{z}, Q=#{q}
+      WHERE STCD = #{stcd} AND PTNO = #{ptno}
+    </update>
+
+    <insert id="insertZqrl">
+      INSERT INTO ST_ZQRL_B(STCD, LNNM, BGTM, PTNO, Z, Q)
+      VALUES(#{stcd}, #{lnnm}, #{bgtm}, #{ptno}, #{z}, #{q})
+    </insert>
+
+    <select id="getMaxZqrlPtno" resultType="string">
+        SELECT MAX(ptno) FROM ST_ZQRL_B WHERE stcd = #{stcd}
+        GROUP BY stcd
+    </select>
+
+    <update id="updateZvarl">
+      UPDATE ST_ZVARL_B
+      SET RZ = #{rz}, W = #{w}, WSFA = #{wsfa}
+      WHERE STCD = #{stcd} AND PTNO = #{ptno}
+    </update>
+
+    <insert id="insertZvarl">
+      INSERT INTO ST_ZVARL_B(STCD,PTNO,RZ,W,WSFA)
+      VALUES(#{stcd}, #{ptno}, #{rz}, #{w}, #{wsfa})
+    </insert>
+
+    <select id="getMaxZvarlPtno" resultType="string">
+        SELECT MAX(ptno) FROM ST_ZVARL_B WHERE stcd = #{stcd}
+        GROUP BY stcd
+    </select>
+
+    <delete id="deleteZvarl">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_ZVARL_B
+            WHERE stcd = #{item.stcd} ptno = #{item.ptno}
+        </foreach>
+        ;END;
+    </delete>
+
+    <select id="getStlc" resultType="string">
+        SELECT STLC FROM ST_STBPRP_B WHERE STCD = #{stcd}
+    </select>
+
+    <insert id="addAllZqrlToOrcl" parameterType="java.util.List">
+        BEGIN
+        <foreach collection="list" item="item" separator="">
+            INSERT INTO ST_ZQRL_B(STCD,BGTM,PTNO,Z,Q,LNNM,MODITIME)
+            VALUES (#{item.stcd}, #{item.bgtm}, #{item.ptno}, #{item.z}, #{item.q}, #{item.lnnm}, #{item.modiTime})
+        </foreach>
+        ;END;
+    </insert>
+
+    <insert id="addAllZvarlToOrcl" parameterType="java.util.List">
+        BEGIN
+        <foreach collection="list" item="item" separator="">
+            INSERT INTO ST_ZVARL_B(STCD,PTNO,RZ,W,WSFA,MSTM,MODITIME)
+            VALUES (#{item.stcd}, #{item.ptno}, #{item.rz}, #{item.w}, #{item.wsfa}, #{item.mstm}, #{item.modiTime})
+        </foreach>
+        ;END;
+    </insert>
+</mapper>

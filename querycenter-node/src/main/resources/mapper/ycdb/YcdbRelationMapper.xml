@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.YcdbRelationDao">
+    <resultMap id="result_zqrl" type="com.goldwater.querycenter.entity.ruku.vo.ZqrlRelationVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="ptno" column="PTNO"/>
+        <result property="z" column="Z"/>
+        <result property="q" column="Q"/>
+    </resultMap>
+
+    <resultMap id="result_zvarl" type="com.goldwater.querycenter.entity.ruku.vo.ZvarlRelationVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="ptno" column="PTNO"/>
+        <result property="rz" column="RZ"/>
+        <result property="w" column="W"/>
+    </resultMap>
+
+    <resultMap id="result_cosst" type="com.goldwater.querycenter.entity.ruku.vo.CosstVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="ordr" column="ORDR"/>
+        <result property="arnm" column="ARNM"/>
+        <result property="custom" column="COSTOM"/>
+        <result property="stlc" column="STLC"/>
+    </resultMap>
+
+    <resultMap id="result_config" type="com.goldwater.querycenter.entity.ruku.StConfig">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="sttp" column="STTP"/>
+        <result property="pMax5m" column="PMAX5M"/>
+        <result property="pMax1h" column="PMAX1H"/>
+        <result property="zMin" column="ZMIN"/>
+        <result property="aMax" column="ZMAX"/>
+        <result property="srage" column="SRAGE"/>
+        <result property="timect" column="TIMECT"/>
+        <result property="dye" column="DYE"/>
+        <result property="wtmp" column="WTMP"/>
+        <result property="gate" column="GATE"/>
+        <result property="volGate" column="VOLGATE"/>
+        <result property="soil" column="SOIL"/>
+        <result property="veloCity" column="VELOCITY"/>
+        <result property="ott" column="OTT"/>
+    </resultMap>
+
+    <select id="queryZqrlList_Level3" resultMap="result_zqrl">
+        SELECT R.STCD,S.STNM ,R.PTNO,R.Z,R.Q
+        FROM ST_ZQRL_B R LEFT JOIN ST_PRIVILEGE_STCDS P ON P.STCD=R.STCD
+        LEFT JOIN (SELECT STCD ,MAX(STNM) STNM FROM  ST_STCONFIG GROUP BY STCD ) S ON R.STCD=S.STCD
+        WHERE R.STCD &lt;&gt; ''
+        AND P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+    </select>
+
+    <select id="queryZqrlList" resultMap="result_zqrl">
+        SELECT R.STCD,S.STNM ,R.PTNO,R.Z,R.Q
+        FROM ST_ZQRL_B R LEFT JOIN (SELECT STCD ,MAX(STNM) STNM FROM  ST_STCONFIG GROUP BY STCD ) S ON R.STCD=S.STCD
+        WHERE R.STCD &lt;&gt; ''
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+    </select>
+
+    <select id="getZqrl" resultMap="result_zqrl">
+        SELECT R.STCD,R.PTNO,R.Z,R.Q
+        FROM ST_ZQRL_B R
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+        <if test="ptno!=null and ptno!=''">
+          AND R.PTNO = #{ptno}
+        </if>
+        <if test="yr!=null and yr!=''">
+            AND datediff(DAY, #{yr} + R.TM) = 0
+        </if>
+    </select>
+
+    <delete id="deleteZqrl">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_ZQRL_B
+            WHERE stcd = #{item.stcd} AND ptno = #{item.ptno}
+        </foreach>
+        ;END;
+    </delete>
+
+    <select id="getZvarlList_Level3" resultMap="result_zvarl">
+        SELECT R.STCD,S.STNM ,R.PTNO,R.RZ,R.W
+        FROM ST_ZVARL_B R ST_PRIVILEGE_STCDS P ON P.STCD=R.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S on R.STCD=S.STCD8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+    </select>
+
+    <select id="getZvarlList" resultMap="result_zvarl">
+        SELECT R.STCD,S.STNM ,R.PTNO,R.RZ,R.W
+        FROM ST_ZVARL_B R LEFT JOIN (SELECT STCD ,MAX(STNM) STNM FROM  ST_STCONFIG GROUP BY STCD ) S ON R.STCD=S.STCD
+        WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+    </select>
+
+    <select id="getZvarl" resultMap="result_zvarl">
+        SELECT R.STCD,S.STNM ,R.PTNO,R.RZ,R.W
+        FROM ST_ZVARL_B R
+        WHERE R.STCD = #{stcd} AND R.PTNO = #{ptno}
+    </select>
+
+    <select id="getCosstList" resultMap="result_cosst">
+        SELECT A.NAME,B.*
+        FROM ST_COSST_B B LEFT JOIN ST_COS_B A ON A.ID=B.ID
+        WHERE 1=1
+        <if test="stdm and stdm!=''">
+            AND B.STCD = #{stdm}
+        </if>
+        <if test="id and id!=''">
+            AND B.ID = #{id}
+        </if>
+    </select>
+
+    <select id="getCosst" resultType="java.util.Map">
+        SELECT * FROM ST_COSST_B WHERE STCD = #{stcd} AND ID = #{id}
+    </select>
+
+    <select id="getConfigList" resultMap="result_config">
+        SELECT A.STCD,A.STNM,A.STTP,A.PMAX5M,A.PMAX1H,A.ZMIN,A.ZMAX,A.SRAGE,A.TIMECT,A.DYE,A.WTMP,A.GATE,A.VOLGATE,
+        A.SOIL,A.VELOCITY,A.OTT FROM ST_STCONFIG A WHERE 1=1
+        <if test="stdm and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="sttp and sttp!=''">
+            AND A.STTP = #{sttp}
+        </if>
+    </select>
+
+    <select id="getConfig" resultMap="result_config">
+        SELECT * FROM ST_STCONFIG WHERE (1 = 1)
+        <if test="stcd and stcd!=''">
+            AND STCD = #{stcd}
+        </if>
+        <if test="sttp and sttp!=''">
+            AND STTP = #{sttp}
+        </if>
+    </select>
+
+    <insert id="addConfig">
+        INSERT INTO ST_STCONFIG(STCD, STNM, STTP, PMAX5M, PMAX1H, ZMIN, ZMAX, TIMECT, SRAGE, DYE, WTMP, GATE, VOLGATE, SOIL, VELOCITY, OTT)
+        VALUES(#{stcd}, #{stnm}, #{sttp}, #{pmax5m}, #{pmax1h}, #{zmin}, #{zmax}, #{timect}, #{srage}, #{dye}, #{wtmp}, #{gate}, #{volgate}, #{soil}, #{velocity}, #{ott})
+    </insert>
+
+    <update id="updateConfig">
+        UPDATE ST_STCONFIG SET STNM = #{stnm},
+        STTP = #{sttp},
+        PMAX5M = #{pmax5m},
+        PMAX1H = #{pmax1h},
+        ZMIN = #{zmin},
+        ZMAX = #{zmax},
+        TIMECT = #{timect},
+        SRAGE = #{srage},
+        DYE = #{dye},
+        WTMP = #{wtmp},
+        GATE = #{gate},
+        VOLGATE = #{volgate},
+        SOIL = #{soil},
+        VELOCITY = #{velocity},
+        OTT = #{ott}
+        WHERE STCD = #{stcd}
+    </update>
+
+    <delete id="deleteConfig">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_STCONFIG
+            WHERE STCD = #{item.stcd} AND STTP = #{item.sttp}
+        </foreach>
+        ;END;
+    </delete>
+
+    <insert id="addAllZqrl" parameterType="java.util.List">
+        BEGIN
+        <foreach collection="list" item="item" separator="">
+            INSERT INTO ST_ZQRL_B(STCD,YR,PTNO,Z,Q)
+            VALUES (#{item.stcd}, #{item.yr}, #{item.ptno}, #{item.z}, #{item.q})
+        </foreach>
+        ;END;
+    </insert>
+
+    <insert id="addAllZvarl" parameterType="java.util.List">
+        BEGIN
+        <foreach collection="list" item="item" separator="">
+            INSERT INTO ST_ZVARL_B(STCD,PTNO,RZ,W,WSFA)
+            VALUES (#{item.stcd}, #{item.ptno}, #{item.rz}, #{item.w}, #{item.wsfa})
+        </foreach>
+        ;END;
+    </insert>
+</mapper>

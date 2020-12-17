@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.YcdbYujinYBDao">
+    <resultMap id="result_cosst" type="com.goldwater.querycenter.entity.ruku.vo.CosstVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="ordr" column="ORDR"/>
+    </resultMap>
+
+    <select id="queryCosst_Level3" resultMap="result_cosst">
+        SELECT A.STCD,A.STNM,A.ORDR FROM ST_COSST_B A,ST_PRIVILEGE_STCDS B WHERE A.STCD=B.STCD AND B.PRIVILEGE_ID =  #{priviligeId}
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="customer!=null and customer!=''">
+            AND A.CUSTOM = #{customer}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+
+    <select id="queryCosst" resultMap="result_cosst">
+        SELECT A.STCD,A.STNM,A.ORDR FROM ST_COSST_B A WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="customer!=null and customer!=''">
+            AND A.CUSTOM = #{customer}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+</mapper>

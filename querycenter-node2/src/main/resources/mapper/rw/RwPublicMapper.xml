@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.RwPublicDao">
+    <resultMap id="result_st_addvcd_d_Map" type="com.goldwater.querycenter.entity.Test">
+        <result property="addvcd" column="addvcd"/>
+        <result property="addvnm" column="addvnm"/>
+        <result property="comments" column="comments"/>
+        <result property="modiTime" column="moditime"/>
+    </resultMap>
+
+    <select id="datas" resultMap="result_st_addvcd_d_Map">
+        SELECT t.addvcd, t.addvnm, t.comments, t.moditime FROM st_addvcd_d t
+        WHERE (1 = 1)
+        <if test="addvcd!=null and addvcd!=''">
+            AND t.addvcd  = #{addvcd}
+        </if>
+    </select>
+
+    <update id="updateAddvcdByCd" parameterType="com.goldwater.querycenter.entity.Test">
+        UPDATE st_addvcd_d set
+            addvnm = #{addvnm},
+            comments=#{comments},
+            moditime=#{modiTime}
+            WHERE addvcd = #{addvcd}
+    </update>
+
+    <insert id="insertAddvcd" parameterType="com.goldwater.querycenter.entity.Test">
+        INSERT INTO st_addvcd_d
+        (
+        addvcd,
+        addvnm ,
+        comments,
+        moditime
+        )
+        values (#{addvcd}, #{addvnm}, #{comments}, #{modiTime})
+    </insert>
+
+    <delete id="deleteAddvcdByCd" parameterType="com.goldwater.querycenter.entity.Test">
+        DELETE FROM st_addvcd_d WHERE addvcd = #{addvcd}
+    </delete>
+
+    <select id="testDatas" resultType="int">
+        SELECT count(8) FROM st_addvcd_d
+    </select>
+
+    <select id="selectPublicItemList" parameterType="String" resultType="java.util.Map">
+        ${sqlStr}
+    </select>
+</mapper>

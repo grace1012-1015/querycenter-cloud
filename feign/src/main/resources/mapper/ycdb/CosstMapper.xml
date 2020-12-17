@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.CosstDao">
+    <resultMap id="result_cosst" type="com.goldwater.querycenter.entity.ruku.vo.CosstVo">
+        <result property="id" column="ID"/>
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="ordr" column="ORDR"/>
+    </resultMap>
+
+    <select id="getMaxOrdr" resultType="string">
+        SELECT MAX(ordr) FROM ST_COSST_B WHERE stcd = #{stcd} AND id = #{id} GROUP BY stcd,id
+    </select>
+
+    <update id="updateCosst">
+        UPDATE ST_COSST_B SET ARNM = #{arnm}, STNM = #{stnm}, ORDR = #{ordr} WHERE STCD = #{stcd} AND ID = #{id}
+    </update>
+
+    <delete id="deleteCosst">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_COSST_B
+            WHERE stcd = #{item.stcd} AND id = #{item.id}
+        </foreach>
+        ;END;
+    </delete>
+
+    <select id="getCosst" resultMap="result_cosst">
+        SELECT * FROM ST_COSST_B
+        WHERE STCD = #{stcd} and ID = #{id};
+    </select>
+
+    <select id="getSoilCosst_Level3" resultMap="result_cosst">
+        SELECT A.STCD,A.STNM,A.ORDR FROM ST_COSST_B A,ST_PRIVILEGE_STCDS B
+        WHERE A.STCD=B.STCD AND A.ID = '5' AND B.PRIVILEGE_ID = #{privilegeId}
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+
+    <select id="getSoilCosst" resultMap="result_cosst">
+        SELECT A.STCD,A.STNM,A.ORDR FROM ST_COSST_B A WHERE  A.ID = '5'
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+
+    <select id="getSwRainCosst_Level3" resultMap="result_cosst">
+        SELECT A.ID, A.STCD,A.STNM,A.ORDR FROM ST_COSST_B A,ST_PRIVILEGE_STCDS B,ST_STBPRP_B S
+        WHERE A.STCD=B.STCD AND A.STCD=S.STCD AND B.PRIVILEGE_ID = #{privilegeId}
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="type!=null and type!=''">
+            AND A.ID = #{type}
+        </if>
+        <if test="custom!=null and custom!=''">
+            AND A.CUSTOM = #{custom}
+        </if>
+        <if test="addvcd!=null and addvcd!=''">
+            AND S.ADDVCD = #{addvcd}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+
+    <select id="getSwRainCosst" resultMap="result_cosst">
+        SELECT A.ID, A.STCD,A.STNM,A.CUSTOM,A.ORDR FROM ST_COSST_B A,ST_STBPRP_B S
+        WHERE A.STCD=S.STCD AND 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="type!=null and type!=''">
+            AND A.ID = #{type}
+        </if>
+        <if test="custom!=null and custom!=''">
+            AND A.CUSTOM = #{custom}
+        </if>
+        <if test="addvcd!=null and addvcd!=''">
+            AND S.ADDVCD = #{addvcd}
+        </if>
+        ORDER BY A.ORDR ASC
+    </select>
+</mapper>

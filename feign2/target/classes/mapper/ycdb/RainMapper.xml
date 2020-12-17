@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.RainDao">
+    <resultMap id="result_fiveminuterain" type="com.goldwater.querycenter.entity.ruku.vo.FiveMinuteRainVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="intv" column="INTV"/>
+        <result property="pdr" column="PDR"/>
+        <result property="dyp" column="DYP"/>
+        <result property="wth" column="WTH"/>
+    </resultMap>
+
+    <select id="queryFiveMinuteRain_Level3" resultMap="result_fiveminuterain">
+        SELECT A.STCD,B.STNM,A.DRP,CONVERT(varchar(100), A.TM, 20) TM,A.INTV,A.PDR,A.DYP,A.WTH
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_PPTN_R5 A ON P.STCD=A.STCD
+        left join RTUEX.DBO.RTU_STATION B on A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId} and A.DRP &lt;&gt; 0
+        <if test="stcd!=null and stcd!=''">
+            AND B.STCD8 = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryFiveMinuteRain" resultMap="result_fiveminuterain">
+        SELECT A.STCD,B.STNM,A.DRP,CONVERT(varchar(100), A.TM, 20) TM,A.INTV,A.PDR,A.DYP,A.WTH
+        FROM ST_PPTN_R5 A LEFT JOIN RTUEX.DBO.RTU_STATION B ON A.stcd=B.stcd8
+        WHERE A.DRP &lt;&gt; 0
+        <if test="stcd!=null and stcd!=''">
+            AND B.STCD8 = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryRainChart" resultMap="result_fiveminuterain">
+        SELECT CONVERT(varchar(100), R.TM, 20) as TM, R.DRP FROM ST_PPTN_R5 R WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD8 = #{stcd}
+        </if>
+        <if test="time!=null and time!=''">
+            AND (datediff(mi,R.TM,#{time}) BETWEEN 0 AND 1444)
+        </if>
+        ORDER BY R.TM ASC
+    </select>
+</mapper>

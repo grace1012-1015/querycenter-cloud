@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.management.RightDao">
+    <resultMap id="result_st_menu" type="com.goldwater.querycenter.entity.management.Menu">
+        <result property="menuId" column="MENU_ID"/>
+        <result property="menuNum" column="MENU_NM"/>
+        <result property="content" column="CONTENT"/>
+        <result property="ordr" column="ORDR"/>
+        <result property="prtId" column="PRT_ID"/>
+    </resultMap>
+
+    <resultMap id="result_st_privilige" type="com.goldwater.querycenter.entity.management.Priviliges">
+        <result property="priviligeId" column="PRIVILEGE_ID"/>
+        <result property="name" column="NAME"/>
+        <result property="level" column="LEVEL"/>
+        <result property="order" column="ORDR"/>
+    </resultMap>
+
+    <resultMap id="result_st_privilige_stcd" type="com.goldwater.querycenter.entity.management.PriviligeStcds">
+        <result property="priviligeId" column="PRIVILEGE_ID"/>
+        <result property="stcd" column="STCD"/>
+    </resultMap>
+
+    <resultMap id="result_st_privilige_menu" type="com.goldwater.querycenter.entity.management.PriviligeMenu">
+        <result property="priviligeId" column="PRIVILEGE_ID"/>
+        <result property="menuId" column="MENU_ID"/>
+    </resultMap>
+
+    <resultMap id="result_st_user_privilige" type="com.goldwater.querycenter.entity.management.UserPrivilige">
+        <result property="priviligeId" column="PRIVILEGE_ID"/>
+        <result property="userCode" column="UCODE"/>
+    </resultMap>
+
+    <select id="getRightsMenuByRightId" resultMap="result_st_menu">
+        SELECT M.MENU_ID,M.MENU_NM,M.CONTENT FROM ST_PRIVILEGE_MENU P
+        LEFT JOIN ST_MENU M ON P.MENU_ID=M.MENU_ID
+        WHERE (1 = 1)
+        <if test="rightsId!=null and rightsId!=''">
+            AND P.PRIVILEGE_ID = #{rightsId}
+        </if>
+    </select>
+
+    <select id="getMenuByUserId" resultMap="result_st_menu">
+        SELECT M.MENU_ID,M.ORDR,M.MENU_NM,M.CONTENT,M.PRT_ID
+        FROM ST_USER_PRIVILEGE U LEFT JOIN ST_PRIVILEGE_MENU P ON U.PRIVILEGE_ID=P.PRIVILEGE_ID
+        LEFT JOIN ST_MENU M ON P.MENU_ID=M.MENU_ID
+        WHERE (1 = 1)
+        <if test="userId!=null and userId!=''">
+            AND U.UCODE = #{userId}
+        </if>
+    </select>
+
+    <select id="getRightByUserId" resultMap="result_st_privilige">
+        SELECT S.PRIVILEGE_ID,S.NAME,S.LEVEL,S.ORDR FROM ST_PRIVILIGES S
+        LEFT JOIN ST_USER_PRIVILEGE U ON U.PRIVILEGE_ID=S.PRIVILEGE_ID
+        WHERE (1 = 1)
+        <if test="userId!=null and userId!=''">
+            AND U.UCODE = #{userId}
+        </if>
+    </select>
+
+    <select id="getParentMenuList" resultMap="result_st_menu">
+        SELECT M.* FROM ST_MENU M,ST_MENU S WHERE S.PRT_ID=M.MENU_ID AND S.CONTENT <![CDATA[ <> ]]> '#'
+        <if test="menuId!=null and menuId!=''">
+            AND S.MENU_ID = #{menuId}
+        </if>
+    </select>
+
+    <select id="getPrvStationList" resultMap="result_st_privilige_stcd">
+        SELECT PRIVILEGE_ID,STCD FROM ST_PRIVILEGE_STCDS
+        WHERE (1 = 1)
+        <if test="privilegeId!=null and privilegeId!=''">
+            AND PRIVILEGE_ID = #{privilegeId}
+        </if>
+    </select>
+
+    <select id="getPrvMenuList" resultMap="result_st_privilige_menu">
+        SELECT PRIVILEGE_ID,MENU_ID FROM ST_PRIVILEGE_MENU
+        WHERE (1 = 1)
+        <if test="privilegeId!=null and privilegeId!=''">
+            AND PRIVILEGE_ID = #{privilegeId}
+        </if>
+    </select>
+
+    <select id="getMenuList" resultMap="result_st_menu">
+        SELECT M.MENU_ID,M.MENU_NM,M.CONTENT,M.ORDR, M.PRT_ID FROM ST_MENU M
+    </select>
+
+    <select id="getUserPrivilege" resultMap="result_st_user_privilige">
+        SELECT PRIVILEGE_ID,UCODE FROM ST_USER_PRIVILEGE
+        WHERE (1 = 1)
+        <if test="uCode!=null and uCode!=''">
+            AND UCODE = #{uCode}
+        </if>
+    </select>
+
+    <insert id="addUserPrivilege">
+      INSERT INTO ST_USER_PRIVILEGE(UCODE, PRIVILEGE_ID) VALUES
+      (#{uCode}, #{privilegeId})
+    </insert>
+
+    <update id="updateUserPrivilege">
+      UPDATE ST_USER_PRIVILEGE
+      SET PRIVILEGE_ID = #{privilegeId} WHERE UCODE = #{uCode}
+    </update>
+
+    <insert id="addPrivilegeMenu">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO ST_PRIVILEGE_MENU(PRIVILEGE_ID, MENU_ID) VALUES(#{privilegeId}, #{item})
+        </foreach>
+        ;END;
+    </insert>
+
+    <insert id="addPrvStation">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO ST_PRIVILEGE_STCDS(PRIVILEGE_ID, STCD)
+            SELECT #{privilegeId}, #{item}
+            WHERE NOT EXISTS
+            (SELECT 8 FROM ST_PRIVILEGE_STCDS WHERE PRIVILEGE_ID = #{privilegeId} AND STCD = #{item})
+        </foreach>
+        ;END;
+    </insert>
+
+    <delete id="removePrvMenu">
+      DELETE FROM ST_PRIVILEGE_MENU WHERE PRIVILEGE_ID = #{privilegeId}
+    </delete>
+
+
+    <delete id="removePrvStation">
+      DELETE FROM ST_PRIVILEGE_STCDS WHERE PRIVILEGE_ID = #{privilegeId}
+    </delete>
+
+    <delete id="removeUserRight">
+      DELETE FROM ST_USER_PRIVILEGE WHERE PRIVILEGE_ID = #{privilegeId}
+    </delete>
+
+    <insert id="addMenu">
+      INSERT INTO ST_MENU(MENU_ID, MENU_NM, CONTENT, ORDR, PRT_ID)
+      VALUES(#{menuId}, #{menuNm}, #{content}, #{ordr}, #{prt_id})
+    </insert>
+
+    <update id="updateMenu">
+      UPDATE ST_MENU
+      SET MENU_NM = #{menuNm},
+          CONTENT = #{content},
+          ORDR = #{ordr}
+      WHERE MENU_ID = #{menuId}
+    </update>
+
+    <delete id="removeMenu">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_MENU
+            WHERE MENU_ID = #{item}
+        </foreach>
+        ;END;
+    </delete>
+</mapper>

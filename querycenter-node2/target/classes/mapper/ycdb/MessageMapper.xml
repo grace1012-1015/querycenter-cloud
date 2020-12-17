@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.MessageDao">
+    <resultMap id="result_message" type="com.goldwater.querycenter.entity.ruku.vo.MessageVo">
+        <result property="rowNumber" column="RowNum"/>
+        <result property="stcd" column="STCD"/>
+        <result property="stcd8" column="STCD8"/>
+        <result property="stnm" column="STNM"/>
+        <result property="sendTime" column="SENDTIME"/>
+        <result property="recvTime" column="RECVTIME"/>
+        <result property="channel" column="CHANNEL"/>
+        <result property="flag" column="FLAG"/>
+        <result property="message" column="MESSAGE"/>
+    </resultMap>
+
+    <resultMap id="result_lastsite" type="com.goldwater.querycenter.entity.ruku.vo.LastSiteVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stcd8" column="STCD8"/>
+        <result property="latestTime" column="latestTime"/>
+    </resultMap>
+
+    <resultMap id="result_lastdata" type="com.goldwater.querycenter.entity.ruku.vo.LastDataVo">
+        <result property="stcd" column="STCD"/>
+        <result property="deval" column="DEVAL"/>
+        <result property="valtpy" column="VALTYP"/>
+        <result property="ymdhm" column="YMDHM"/>
+    </resultMap>
+
+    <select id="query_level3" resultMap="result_message">
+        SELECT T.* FROM(SELECT row_number()over(partition by S.STCD order by M.SENDTIME desc )as RowNum,
+        S.STCD,S.STCD8,S.STNM,CONVERT(varchar(100),M.SENDTIME,20)SENDTIME,CONVERT(varchar(100),M.RECVTIME, 20)RECVTIME,M.CHANNEL,M.FLAG,M.MESSAGE
+        FROM ST_PRIVILEGE_STCDS B LEFT JOIN RTUEX.DBO.RTU_STATION S ON S.STCD=B.STCD LEFT JOIN rtuex.dbo.RTU_MESSAGE M on S.STCD=M.STCD
+        WHERE B.PRIVILEGE_ID = #{priviligeId} and M.SENDTIME > #{sendTime} AND M.MESSAGE &lt;&gt; 'NULL'
+        <if test="stcd!=null and stcd!=''">
+            AND S.STCD8 = #{stcd}
+        </if>
+        <if test="num!=null and num!=''">
+            )T WHERE T.RowNum &lt;= #{num}
+        </if>
+    </select>
+
+    <select id="query" resultMap="result_message">
+        SELECT T.* FROM(SELECT row_number()over(partition by S.STCD order by M.SENDTIME desc )as RowNum,
+        S.STCD,S.STCD8,S.STNM,CONVERT(varchar(100),M.SENDTIME,20)SENDTIME,CONVERT(varchar(100),M.RECVTIME, 20)RECVTIME,M.CHANNEL,M.FLAG,M.MESSAGE
+        FROM RTUEX.DBO.RTU_STATION S LEFT JOIN rtuex.dbo.RTU_MESSAGE M ON S.STCD=M.STCD
+        WHERE M.SENDTIME > #{sendTime} AND M.MESSAGE &lt;&gt; 'NULL'
+        <if test="stcd!=null and stcd!=''">
+            AND S.STCD8 = #{stcd}
+        </if>
+        <if test="num!=null and num!=''">
+            )T WHERE T.RowNum &lt;= #{num}
+        </if>
+    </select>
+
+    <select id="getLatestSite" resultMap="result_lastsite">
+        SELECT STCD STCD8,MAX(YMDHM) latestTime FROM sjycdb.dbo.ST_RTSR_R
+        WHERE DATEDIFF(d,YMDHM,getdate()) = 0 AND VALTYP IN(11,21,22,24,51)
+        GROUP BY STCD,YMDHM
+        ORDER BY YMDHM DESC
+    </select>
+
+    <select id="getLatestData" resultMap="result_lastdata">
+        SELECT DEVAL, VALTYP, STCD FROM sjycdb.dbo.ST_RTSR_R
+        WHERE STCD = #{stcd} AND YMDHM = #{ymdhm}
+        AND VALTYP IN(11,21,22,24,51)
+    </select>
+
+    <select id="getDayMessage" resultMap="result_lastdata">
+        SELECT STCD,YMDHM,DEVAL,VALTYP FROM sjycdb.dbo.ST_RTSR_R
+        WHERE STCD = #{stcd}
+        AND YMDHM >= #{startDate} AND YMDHM &lt;= #{endDate}
+        AND VALTYP IN(11,21,22,24,51)
+        ORDER BY YMDHM DESC
+    </select>
+
+</mapper>

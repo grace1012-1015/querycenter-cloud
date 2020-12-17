@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.ruku.ChartDao">
+    <resultMap id="result_st_pptn_r" type="com.goldwater.querycenter.entity.ruku.SingleHourRain">
+        <result property="stcd" column="STCD"/>
+        <result property="tm" column="TM"/>
+        <result property="drp" column="DRP"/><result property="intv" column="INTV"/>
+        <result property="pdr" column="PDR"/>
+        <result property="dyp" column="DYP"/>
+        <result property="wth" column="WTH"/>
+    </resultMap>
+
+    <resultMap id="result_st_river_r" type="com.goldwater.querycenter.entity.ruku.SingleHourRiver">
+        <result property="stcd" column="STCD"/>
+        <result property="tm" column="TM"/>
+        <result property="z" column="Z"/>
+        <result property="q" column="Q"/>
+        <result property="xsa" column="XSA"/>
+        <result property="xsavv" column="XSAVV"/>
+        <result property="xsmxv" column="XSMXV"/>
+        <result property="flwchrcd" column="FLWCHRCD"/>
+        <result property="wptn" column="WPTN"/>
+        <result property="msqmt" column="MSQMT"/>
+        <result property="msamt" column="MSAMT"/>
+        <result property="msvmt" column="MSVMT"/>
+    </resultMap>
+
+    <resultMap id="result_singlervffch_vo" type="com.goldwater.querycenter.entity.ruku.vo.SingleRvffchVo">
+        <result property="stnm" column="STNM"/>
+        <result property="ldkel" column="LDKEL"/>
+        <result property="rdkel" column="RDKEL"/>
+        <result property="wrz" column="WRZ"/>
+        <result property="wrq" column="WRQ"/>
+        <result property="grz" column="GRZ"/>
+        <result property="grq" column="GRQ"/>
+        <result property="flpq" column="FLPQ"/>
+        <result property="obhtz" column="OBHTZ"/>
+        <result property="obhtztm" column="OBHTZTM"/>
+        <result property="ivhz" column="IVHZ"/>
+        <result property="ivhztm" column="IVHZTM"/>
+        <result property="obmxq" column="OBMXQ"/>
+        <result property="obmxqtm" column="OBMXQTM"/>
+        <result property="ivmxq" column="IVMXQ"/>
+        <result property="ivmxqtm" column="IVMXQTM"/>
+        <result property="hmxs" column="HMXS"/>
+        <result property="hmxstm" column="HMXSTM"/>
+        <result property="hmxavv" column="HMXAVV"/>
+        <result property="hmxavvtm" column="HMXAVVTM"/>
+        <result property="hlz" column="HLZ"/>
+        <result property="hlztm" column="HLZTM"/>
+        <result property="hmnq" column="HMNQ"/>
+        <result property="hmnqtm" column="HMNQTM"/>
+        <result property="taz" column="TAZ"/>
+        <result property="taq" column="TAQ"/>
+        <result property="laz" column="LAZ"/>
+        <result property="laq" column="LAQ"/>
+        <result property="sfz" column="SFZ"/>
+        <result property="sfq" column="SFQ"/>
+        <result property="modiTime" column="MODITIME"/>
+    </resultMap>
+
+    <resultMap id="result_st_zvarl_b" type="com.goldwater.querycenter.entity.ruku.SingleRZWRelation">
+        <result property="mstm" column="MSTM"/>
+        <result property="ptno" column="PTNO"/>
+        <result property="rz" column="RZ"/>
+        <result property="w" column="W"/>
+        <result property="wsfa" column="WSFA"/>
+        <result property="modiTime" column="MODITIME"/>
+    </resultMap>
+
+    <resultMap id="result_st_zqrl_b" type="com.goldwater.querycenter.entity.ruku.SingleZqrlRelation">
+        <result property="bgtm" column="BGTM"/>
+        <result property="ptno" column="PTNO"/>
+        <result property="z" column="Z"/>
+        <result property="q" column="Q"/>
+        <result property="lnnm" column="LNNM"/>
+        <result property="modiTime" column="MODITIME"/>
+    </resultMap>
+
+    <select id="getSingleHourRain" resultMap="result_st_pptn_r">
+        SELECT WATF_TOCHAR(TM,'YYYY-MM-DD HH24')TM,DRP,INTV FROM ST_PPTN_R
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND stcd = #{stcd}
+        </if>
+        <if test="sttm!=null and sttm!=''">
+            AND tm > WATF_TODATE(#{sttm},'yyyy-mm-dd hh24')
+        </if>
+        <if test="entm!=null and entm!=''">
+            AND tm &lt;= WATF_TODATE(#{entm},'yyyy-mm-dd hh24')
+        </if>
+        ORDER BY TM
+    </select>
+
+    <select id="getSingleHourRiver" resultMap="result_st_river_r">
+        SELECT WATF_TOCHAR(TM,'YYYY-MM-DD HH24:MI') TM,Z,Q,FLWCHRCD,WPTN FROM ST_RIVER_R
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND stcd = #{stcd}
+        </if>
+        <if test="sttm!=null and sttm!=''">
+            AND tm > WATF_TODATE(#{sttm},'yyyy-mm-dd hh24')
+        </if>
+        <if test="entm!=null and entm!=''">
+            AND tm &lt;= WATF_TODATE(#{entm},'yyyy-mm-dd hh24')
+        </if>
+    </select>
+
+    <select id="getSingleRvffch" resultMap="result_singlervffch_vo">
+        SELECT WATF_TRIM(STNM)STNM,LDKEL,RDKEL,WRZ,WRQ,GRZ,GRQ,FLPQ,OBHTZ,WATF_TOCHAR(OBHTZTM,'YYYY-MM-DD HH24:MI')OBHTZTM,IVHZ,IVHZTM,OBMXQ,
+        WATF_TOCHAR(OBMXQTM,'YYYY-MM-DD HH24:MI')OBMXQTM,IVMXQ,WATF_TOCHAR(IVMXQTM,'YYYY-MM-DD HH24:MI')IVMXQTM,HMXS,
+        WATF_TOCHAR(HMXSTM,'YYYY-MM-DD HH24:MI')HMXSTM,HMXAVV,WATF_TOCHAR(HMXAVVTM,'YYYY-MM-DD HH24:MI')HMXAVVTM,HLZ,
+        WATF_TOCHAR(HLZTM,'YYYY-MM-DD HH24:MI')HLZTM,HMNQ,WATF_TOCHAR(HMNQTM,'YYYY-MM-DD HH24:MI')HMNQTM,TAZ,TAQ,LAZ,LAQ,SFZ,SFQ,
+        WATF_TOCHAR(R.MODITIME,'YYYY-MM-DD HH24:MI') MODITIME FROM ST_RVFCCH_B R
+        INNER JOIN ST_STBPRP_B B ON R.STCD= B.STCD
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+    </select>
+
+    <select id="getSingleRZWRelation" resultMap="result_st_zvarl_b">
+        SELECT WATF_TOCHAR(MSTM,'YYYY-MM-DD HH24:MI')MSTM,PTNO,RZ,W,WSFA,WATF_TOCHAR(MODITIME,'YYYY-MM-DD HH24:MI')MODITIME FROM ST_ZVARL_B B
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND B.STCD = #{stcd}
+        </if>
+        ORDER BY MSTM,PTNO
+    </select>
+
+    <select id="getSingleZqrlRelation" resultMap="result_st_zqrl_b">
+        SELECT WATF_TOCHAR(BGTM,'YYYY-MM-DD HH24:MI')MSTM,PTNO,Z,Q,LNNM,WATF_TOCHAR(MODITIME,'YYYY-MM-DD HH24:MI')MODITIME FROM ST_ZQRL_B B
+        WHERE (1 = 1)
+        <if test="stcd!=null and stcd!=''">
+            AND B.STCD = #{stcd}
+        </if>
+        ORDER BY MSTM,PTNO
+    </select>
+</mapper>

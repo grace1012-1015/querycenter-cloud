@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.ruku.RwJktjDao">
+    <resultMap id="result_pptn" type="com.goldwater.querycenter.entity.ruku.vo.PptnVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stlc" column="STLC"/>
+        <result property="tj" column="TJ"/>
+    </resultMap>
+
+    <resultMap id="result_stcdZ" type="com.goldwater.querycenter.entity.ruku.vo.StcdZVo">
+        <result property="id1" column="ID1"/>
+        <result property="id2" column="ID2"/>
+        <result property="stcd" column="STCD"/>
+        <result property="tm" column="TM"/>
+        <result property="z" column="Z"/>
+    </resultMap>
+
+    <select id="querySoil" parameterType="String" resultType="java.util.Map">
+        SELECT a.stnm,t.* FROM (SELECT t.stcd
+        <foreach collection="list" item="info" separator="">
+            ,MIN(CASE t.TM WHEN to_date(#{info.date},'yyyyMMddHH24') THEN t.VTAVSLM END) AS #{info.drp}
+        </foreach>
+        FROM ST_SOIL_R t GROUP BY t.stcd) t
+        LEFT JOIN ST_STBPRP_B a ON t.stcd=a.stcd WHERE 1=1 AND A.STCD = #{stcd}
+    </select>
+
+    <select id="querySwRainJk" resultType="java.util.Map">
+        SELECT
+        <foreach collection="list" item="info" separator="">
+            MIN(CASE to_char(A.TM, 'hh24') when #{info.index} THEN A.DRP END) AS #{info.drp},
+        </foreach>
+        A.STCD,MIN(A.DYP) AS DYP  FROM (select R.STCD, R.TM, R.DRP,(CASE to_char(R.TM, 'yyyy-mm-dd hh24') WHEN
+        #{time} || '08' THEN R.DYP END) AS DYP  FROM ST_PPTN_R R WHERE (to_char(R.TM, 'yyyy-mm-dd') = #{time}
+        OR to_char(R.TM, 'yyyy-mm-dd') = #{tomorTime}
+        AND to_char(R.TM, 'yyyy-mm-dd hh24') >= #{time} || '08' AND to_char(R.TM, 'yyyy-mm-dd hh24') &lt;=  #{tomorTime} || '07'
+        AND R.STCD = #{stcd} ) A  GROUP BY A.STCD
+    </select>
+
+    <select id="querySwWaterJk" resultType="java.util.Map">
+        SELECT
+        <foreach collection="list" item="info" separator="">
+            MAX (CASE to_char(A.TM, 'hh24') when #{info.index} THEN A.Z END) AS #{info.drp},
+        </foreach>
+        A.STCD from (
+        SELECT * FROM (SELECT R.STCD, R.TM, R.RZ AS Z FROM ST_RSVR_R R WHERE R.STCD = #{stcd}
+        UNION ALL SELECT R.STCD, R.TM, #{upOrDown} AS Z
+        FROM ST_WAS_R R WHERE R.STCD = #{stcd}
+        UNION ALL SELECT R.STCD, R.TM, #{ppupOrPpdown} AS Z
+        FROM ST_PUMP_R R WHERE R.STCD = #{stcd}
+        UNION ALL SELECT R.STCD, R.TM, R.Z as Z from ST_RIVER_R R  where R.STCD = #{stcd}  )
+        R where (to_char(R.TM, 'yyyy-mm-dd') = #{time}
+        OR to_char(R.TM, 'yyyy-mm-dd') = #{tomorTime}
+        AND to_char(R.TM, 'yyyy-mm-dd hh24') >= #{time} || '00' AND to_char(R.TM, 'yyyy-mm-dd hh24') &lt;=  #{tomorTime} || '24'
+        AND R.STCD = #{stcd} ) A  GROUP BY A.STCD
+    </select>
+
+    <select id="querySwRainTJ" resultMap="result_pptn">
+        SELECT s.stcd,s.stlc,SUM(t.drp) AS tj FROM st_pptn_r t LEFT JOIN st_stbprp_b s ON t.stcd = s.stcd WHERE
+        t.tm &lt;= to_date(#{timeInterval}, 'yyyyMMddHH24') AND t.tm>=to_date(#{time} || '00','yyyyMMddHH24')
+        AND t.stcd = #{stcd} group by s.stcd,s.stlc
+    </select>
+
+    <select id="querySwRainTJ_00" resultMap="result_pptn">
+        SELECT s.stcd,s.stlc,t.dyp as tj FROM st_pptn_r t LEFT JOIN st_stbprp_b s ON t.stcd = s.stcd WHERE
+        t.tm = to_date(#{timeInt}, 'yyyyMMddHH24') AND t.stcd = #{stcd}
+    </select>
+
+    <select id="querySwRainTJ2" resultMap="result_pptn">
+        SELECT s.stcd,s.stlc,SUM(t.drp) AS tj FROM st_pptn_r t LEFT JOIN st_stbprp_b s ON t.stcd = s.stcd WHERE
+        t.tm &lt;= to_date(#{nowTime}, 'yyyyMMddHH24') AND t.tm>=to_date(#{oldTime},'yyyyMMddHH24')
+        AND t.stcd = #{stcd} group by s.stcd,s.stlc
+    </select>
+
+    <select id="querySwRainTJ2_00" resultMap="result_pptn">
+        SELECT s.stcd,s.stlc,t.dyp as tj FROM st_pptn_r t LEFT JOIN st_stbprp_b s ON t.stcd = s.stcd WHERE
+        t.tm = to_date(#{nowTime}, 'yyyyMMddHH24') AND t.stcd = #{stcd}
+    </select>
+
+    <select id="getStcdZ_1Or3" resultMap="result_stcdZ">
+        SELECT 1 AS ID1,3 AS ID2,R.STCD, R.TM, DRP AS Z FROM ST_PPTN_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+    </select>
+
+    <select id="getStcdZ_2Or4" resultMap="result_stcdZ">
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, R.Z AS Z FROM ST_RIVER_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, R.Z AS Z FROM ST_RSVR_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, NVL(R.DWZ, R.UPZ ) AS Z FROM ST_WAS_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, NVL(R.PPDWZ, R.PPUPZ ) AS Z FROM ST_PUMP_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+    </select>
+
+    <select id="getStcdZ" resultMap="result_stcdZ">
+        SELECT 1 AS ID1,3 AS ID2,R.STCD, R.TM, DRP AS Z FROM ST_PPTN_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, R.Z AS Z FROM ST_RIVER_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, R.Z AS Z FROM ST_RSVR_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, NVL(R.DWZ, R.UPZ ) AS Z FROM ST_WAS_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, NVL(R.PPDWZ, R.PPUPZ ) AS Z FROM ST_PUMP_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+        UNION ALL
+        SELECT 2 AS ID1,4 AS ID2,R.STCD, R.TM, R.VTAVSLM AS Z FROM ST_SOIL_R R
+        WHERE  R.TM=to_date(#{time},'yyyy-mm-dd hh24')
+    </select>
+
+    <select id="getStbprp" resultType="java.util.Map">
+        SELECT STCD,STTP FROM ST_STBPRP_B WHERE STCD IN (#{id24Stcd})
+    </select>
+</mapper>

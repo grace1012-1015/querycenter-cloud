@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.ruku.RwYujinYBDao">
+    <resultMap id="result_river" type="com.goldwater.querycenter.entity.ruku.vo.RiverVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="z" column="Z"/>
+        <result property="wrz" column="WRZ"/>
+    </resultMap>
+
+    <select id="queryRiver" resultMap="result_river">
+        select R.STCD,B.STNM,to_char(R.TM,'yyyy-MM-dd HH24:mi:ss') TM ,R.Z,H.WRZ from ST_RIVER_R R,ST_RVFCCH_B H,
+        ST_STBPRP_B B where R.STCD=H.STCD and R.STCD=B.STCD and R.Z>=H.WRZ
+        <if test="stcd!=null and stcd!=''">
+            AND R.STCD = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND R.TM >= to_date(#{startTm}, 'yyyy-mm-dd,hh24:mi')
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND R.TM &lt;= to_date(#{endTm}, 'yyyy-mm-dd,hh24:mi')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.FlowDao">
+    <resultMap id="result_queryflow_r5" type="com.goldwater.querycenter.entity.ruku.vo.FlowR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="flow" column="FLOW"/>
+        <result property="devNo" column="DEVNO"/>
+    </resultMap>
+
+    <resultMap id="result_queryflux_r5" type="com.goldwater.querycenter.entity.ruku.vo.FluxR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="flux" column="FLUX"/>
+    </resultMap>
+
+    <resultMap id="result_pickflux" type="com.goldwater.querycenter.entity.ruku.PickFlux">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="enterFlow" column="EnterFlow"/>
+    </resultMap>
+
+    <select id="queryFlow_R5_Level3" resultMap="result_queryflow_r5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.FLOW,A.DEVNO
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_FLOW_R A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stcd!=null and stcd!=''">
+          AND A.STCD = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+          AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryFlow_R5" resultMap="result_queryflow_r5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.FLOW,A.DEVNO
+        FROM ST_FLOW_R A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryFlux_R5_Level3" resultMap="result_queryflux_r5">
+        A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.FLUX
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_FLOW_R A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryFlux_R5" resultMap="result_queryflux_r5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.FLOW,A.DEVNO
+        FROM ST_FLUX_R A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="getPickFluxList" resultMap="result_pickflux">
+      SELECT A.STCD,A.STNM,A.EnterFlow FROM ST_PICK_FLUX A WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="enterFlow!=null and enterFlow!=''">
+            AND A.EnterFlow = #{enterFlow}
+        </if>
+    </select>
+
+    <update id="updatePickFlow">
+      UPDATE ST_PICK_FLUX SET
+      STCD = #{stcd}, STNM = #{stnm}, EnterFlow = #{enterFlow}
+      WHERE STCD = #{oldStcd} and stnm = #{oldStnm}
+    </update>
+
+    <delete id="delPickFlow">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM ST_PICK_FLUX
+            WHERE stcd = #{item.stcd} AND stnm = #{item.stnm}
+        </foreach>
+        ;END;
+    </delete>
+
+    <select id="getPickFlux" resultMap="result_pickflux">
+        SELECT STCD, STNM, EnterFlow FROM ST_PICK_FLUX
+        WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND STCD = #{stcd}
+        </if>
+        <if test="stnm!=null and stnm!=''">
+            AND STNM = #{stnm}
+        </if>
+    </select>
+
+</mapper>

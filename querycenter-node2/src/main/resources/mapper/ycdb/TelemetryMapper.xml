@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.TelemetryDao">
+    <resultMap id="result_rtsr" type="com.goldwater.querycenter.entity.ruku.vo.RtsrVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="devNo" column="DEVNO"/>
+        <result property="ymdhm" column="YMDHM"/>
+        <result property="deval" column="DEVAL"/>
+        <result property="valtyp" column="VALTYP"/>
+        <result property="channel" column="CHANNEL"/>
+        <result property="flag" column="FLAG"/>
+        <result property="insertTime" column="INSERTTIME"/>
+    </resultMap>
+
+    <select id="queryTelemetryDatas_Level3" resultMap="result_rtsr">
+        SELECT A.STCD,B.STNM,A.DEVNO,CONVERT(varchar(100), A.YMDHM, 20) YMDHM,A.DEVAL,A.VALTYP,A.CHANNEL,A.FLAG, CONVERT(varchar(100), A.INSERTTIME , 20) INSERTTIME FROM
+        (SELECT A.STCD,A.YMDHM TIME,A.VALTYP FROM ST_RTSR_R A,ST_PRIVILEGE_STCDS B WHERE A.STCD  &lt;&gt; '' AND A.STCD=B.STCD and A. CHANNEL  &lt;&gt; 999
+        <if test="startTm!=null and startTm!=''">
+            AND A.YMDHM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.YMDHM &lt;= #{endTm}
+        </if>
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        )C LEFT JOIN ST_RTSR_R A on A.stcd=C.stcd AND A.VALTYP =C.VALTYP AND A.YMDHM=C.TIME AND A. CHANNEL &lt;&gt; 999
+        LEFT JOIN (SELECT STCD ,MAX(STNM) STNM FROM  ST_STCONFIG GROUP BY STCD ) B ON A.stcd=B.stcd WHERE 1=1
+        <if test="valtyp!=null and valtyp!=''">
+            AND A.VALTYP = #{valtyp}
+        </if>
+        <if test="state!=null and state!=''">
+            AND A.FLAG = #{state}
+        </if>
+    </select>
+
+    <select id="queryTelemetryDatas" resultMap="result_rtsr">
+        SELECT A.STCD,B.STNM,A.DEVNO,CONVERT(varchar(100), A.YMDHM, 20) YMDHM,A.DEVAL,A.VALTYP,A.CHANNEL,A.FLAG, CONVERT(varchar(100), A.INSERTTIME , 20) INSERTTIME FROM
+        (SELECT A.STCD,A.YMDHM TIME ,A.VALTYP FROM ST_RTSR_R A WHERE A.STCD &lt;&gt; '' and A. CHANNEL &lt;&gt; 999
+        <if test="startTm!=null and startTm!=''">
+            AND A.YMDHM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.YMDHM &lt;= #{endTm}
+        </if>
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        )C LEFT JOIN ST_RTSR_R A on A.stcd=C.stcd AND A.VALTYP =C.VALTYP AND A.YMDHM=C.TIME AND A. CHANNEL &lt;&gt; 999
+        LEFT JOIN (SELECT STCD ,MAX(STNM) STNM FROM  ST_STCONFIG GROUP BY STCD ) B ON A.stcd=B.stcd WHERE 1=1
+        <if test="valtyp!=null and valtyp!=''">
+            AND A.VALTYP = #{valtyp}
+        </if>
+        <if test="state!=null and state!=''">
+            AND A.FLAG = #{state}
+        </if>
+    </select>
+
+    <select id="queryStationData" resultMap="result_rtsr">
+        SELECT A.STCD,B.STNM,A.DEVNO,CONVERT(varchar(100), A.YMDHM, 20) YMDHM,A.DEVAL,A.VALTYP,A.CHANNEL,A.FLAG, CONVERT(varchar(100), A.INSERTTIME , 20) INSERTTIME
+        FROM ST_RTSR_R A LEFT JOIN ST_STBPRP_B B ON A.STCD=B.STCD WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND A.STCD = #{stcd}
+        </if>
+        <if test="valtyp!=null and valtyp!=''">
+            AND A.VALTYP = #{valtyp}
+        </if>
+        ORDER BY YMDHM DESC
+    </select>
+</mapper>

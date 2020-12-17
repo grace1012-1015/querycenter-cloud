@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.VolgtDao">
+    <resultMap id="result_volGate" type="com.goldwater.querycenter.entity.ruku.VolGate">
+        <result property="tm" column="TM"/>
+        <result property="volGate" column="VOLGATE"/>
+    </resultMap>
+
+    <resultMap id="result_anomalyVoltageVo" type="com.goldwater.querycenter.entity.ruku.vo.AnomalyVoltageVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="volGate" column="VOLGATE"/>
+    </resultMap>
+
+    <select id="queryChart" resultMap="result_volGate">
+        SELECT CONVERT(varchar(100), R.TM, 20) AS TM,R.VOLGATE FROM ST_VOLGATE_R R WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND R.STCD = #{stdm}
+        </if>
+        <if test="time!=null and time!=''">
+            AND (datediff(day, R.TM, #{time}) BETWEEN 0 AND 6)
+        </if>
+        ORDER BY R.TM ASC
+    </select>
+
+    <select id="queryAnomalyVoltage_Level3_start_end" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R0.STCD,R0.TM from ST_VOLGATE_R R0 where R0.TM > #{startTm} and R0.TM &lt; #{endTm} and (R0.VOLGATE>15 or R0.VOLGATE &lt; 11)) R1
+        ST_PRIVILEGE_STCDS P,ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM
+        RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S WHERE R1.STCD=R2.STCD AND R1.TM = R2.TM AND R1.STCD=S.STCD8 AND
+        P.STCD=R1.STCD AND P.PRIVILEGE_ID = #{priviligeId} AND (R2.VOLGATE > 15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+
+    <select id="queryAnomalyVoltage_Level3_end" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R1.STCD,MAX(R1.TM) as TM from  (Select * from ST_VOLGATE_R R0 where R0.TM &lt; #{endTm}) R1 group by R1.STCD)R1
+        ST_PRIVILEGE_STCDS P,ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM
+        RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S WHERE R1.STCD=R2.STCD AND R1.TM = R2.TM AND R1.STCD=S.STCD8 AND
+        P.STCD=R1.STCD AND P.PRIVILEGE_ID = #{priviligeId} AND (R2.VOLGATE > 15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+
+    <select id="queryAnomalyVoltage_Level3" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R1.STCD,MAX(R1.TM) as TM from ST_VOLGATE_R R1 group by R1.STCD)R1
+        ST_PRIVILEGE_STCDS P,ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM
+        RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S WHERE R1.STCD=R2.STCD AND R1.TM = R2.TM AND R1.STCD=S.STCD8 AND
+        P.STCD=R1.STCD AND P.PRIVILEGE_ID = #{priviligeId} AND (R2.VOLGATE > 15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+
+    <select id="queryAnomalyVoltage_start_end" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R0.STCD,R0.TM from ST_VOLGATE_R R0 where R0.TM > #{startTm} and R0.TM &lt; #{endTm} and (R0.VOLGATE>15 or R0.VOLGATE &lt; 11)) R1
+        ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S
+        where R1.STCD=R2.STCD and R1.TM = R2.TM and R1.STCD=S.STCD8 and (R2.VOLGATE>15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+
+    <select id="queryAnomalyVoltage_end" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R1.STCD,MAX(R1.TM) as TM from  (Select * from ST_VOLGATE_R R0 where R0.TM &lt; #{endTm}) R1 group by R1.STCD)R1
+        ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S
+        where R1.STCD=R2.STCD and R1.TM = R2.TM and R1.STCD=S.STCD8 and (R2.VOLGATE>15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+
+    <select id="queryAnomalyVoltage" resultMap="result_anomalyVoltageVo">
+        Select R2.STCD,rtrim(S.STNM)STNM,CONVERT(varchar(100), R2.TM, 20) AS TM,R2.VOLGATE FROM (
+        Select R1.STCD,MAX(R1.TM) as TM from ST_VOLGATE_R R1 group by R1.STCD)R1
+        ST_VOLGATE_R R2,(SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) S
+        where R1.STCD=R2.STCD and R1.TM = R2.TM and R1.STCD=S.STCD8 and (R2.VOLGATE>15 or R2.VOLGATE &lt; 11)
+        <if test="stdm!=null and stdm!=''">
+            AND R2.STCD = #{stcd}
+        </if>
+        <if test="volGate!=null and volGate!=''">
+            AND R2.VOLGATE &lt;= #{volGate}
+        </if>
+    </select>
+</mapper>

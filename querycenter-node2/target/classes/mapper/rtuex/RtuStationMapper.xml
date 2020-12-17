@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rtuex.RtuStationDao">
+    <resultMap id="result_rtustation" type="com.goldwater.querycenter.entity.ruku.RtuStation">
+        <result property="stcd" column="STCD"/>
+        <result property="stcd8" column="STCD8"/>
+        <result property="stnm" column="STNM"/>
+        <result property="sttp" column="STTP"/>
+        <result property="rvnm" column="RVNM"/>
+        <result property="protocol" column="PROTOCOL"/>
+        <result property="rtucd" column="RTUCD"/>
+        <result property="ctcd" column="CTCD"/>
+        <result property="bsnm" column="BSNM"/>
+        <result property="hnnm" column="HNNM"/>
+        <result property="dtmel" column="DTMEL"/>
+        <result property="accuraty" column="ACCURATY"/>
+        <result property="river_warn_low" column="RIVER_WARN_LOW"/>
+        <result property="river_warn_high" column="RIVER_WARN_HIGH"/>
+        <result property="river_warn_minute" column="RAIN_WARN_MINUTE"/>
+        <result property="telephone" column="TELPHONE"/>
+        <result property="flag_hd" column="FLAG_HD"/>
+        <result property="center" column="CENTER"/>
+        <result property="borrow" column="BORROW"/>
+    </resultMap>
+
+    <resultMap id="result_stationmessage" type="com.goldwater.querycenter.entity.ruku.vo.StationMessageVo">
+        <result property="stcd" column="STCD"/>
+        <result property="stcd8" column="STCD8"/>
+        <result property="stnm" column="STNM"/>
+        <result property="sttp" column="STTP"/>
+        <result property="rvnm" column="RVNM"/>
+        <result property="protocol" column="PROTOCOL"/>
+        <result property="sendTime" column="SENDTIME"/>
+        <result property="recvTime" column="RECVTIME"/>
+        <result property="funcCode" column="FUNCCODE"/>
+    </resultMap>
+
+    <select id="queryStcdStnm" resultMap="result_rtustation">
+        SELECT STCD8 STCD, STNM, STTP FROM RTU_STATION
+        WHERE (1 = 1)
+        <if test="stcd8!=null and stcd8!=''">
+            AND STCD8 = #{stcd8}
+        </if>
+        <if test="stcd!=null and stcd!=''">
+            AND STCD = #{stcd}
+        </if>
+        <if test="rtucd!=null and rtucd!=''">
+            AND rtucd = #{rtucd}
+        </if>
+    </select>
+
+    <select id="selectTop1StationMessage" resultMap="result_stationmessage">
+        SELECT top 1 S.STCD,S.STCD8,S.STNM,S.STTP,S.RVNM,S.PROTOCOL,M.SENDTIME,M.RECVTIME,M.FUNCCODE
+        FROM RTUEX.dbo.RTU_STATION S
+        LEFT JOIN RTUEX.dbo.RTU_MESSAGE M ON S.STCD = M.STCD
+        WHERE S.STCD8 = #{stcd8} AND M.SENDTIME = #{sendTime}
+        AND M.SENDTIME IS NOT NULL AND M.RECVTIME IS NOT NULL
+    </select>
+
+    <select id="getStationList" resultMap="result_rtustation">
+        SELECT R.STCD,R.RTUCD,R.STCD8,R.CTCD,R.STNM,R.RVNM,R.BSNM,R.HNNM,R.PROTOCOL,R.DTMEL,R.STTP,R.ACCURATY,R.RIVER_WARN_LOW,R.RIVER_WARN_HIGH,
+        R.RAIN_WARN_MINUTE,R.TELPHONE,R.FLAG_HD,R.CENTER ,R.BORROW
+        FROM RTU_STATION R WHERE 1=1
+        <if test="stcd!=null and stcd!=''">
+            AND (R.STCD LIKE #{stcd} OR R.RTUCD LIKE #{stcd} OR R.STCD8 LIKE #{stcd})
+        </if>
+        <if test="protocol!=null and protocol!=''">
+            AND  R.PROTOCOL = #{protocol}
+        </if>
+        <if test="sttp!=null and sttp!=''">
+            AND  R.STTP = #{sttp}
+        </if>
+    </select>
+
+    <select id="getStationSelect" resultMap="result_rtustation">
+        SELECT DISTINCT STCD8 STCD,STNM FROM RTU_STATION
+    </select>
+
+    <update id="updateStation">
+        UPDATE RTU_STATION SET
+        STNM = #{stnm},
+        RVNM = #{rvnm},
+        BSNM = #{bsnm},
+        HNNM = #{hnnm},
+        PROTOCOL = #{protocol},
+        DTMEL = #{dtmel},
+        STTP = #{sttp},
+        TELPHONE = #{telphone},
+        FLAG_HD = #{flag_hd},
+        CENTER = #{center},
+        <if test="flag_rain!=null and flag_rain!=''">
+            FLAG_RAIN = #{flag_rain},
+        </if>
+        <if test="flag_water!=null and flag_water!=''">
+            FLAG_WATER = #{flag_water},
+        </if>
+        BORROW = #{borrow}
+        WHERE STCD = #{stcd} AND RTUCD = #{rtucd} AND STCD8 = #{stcd8}
+    </update>
+
+    <delete id="delStation">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM RTU_STATION
+            WHERE STCD = #{item.stcd} AND RTUCD = #{item.rtucd} AND STCD8 = #{item.stcd8}
+        </foreach>
+        ;END;
+    </delete>
+
+    <update id="customStation">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            UPDATE ST_COSST_B SET CUSTOM = 1
+            WHERE STCD = #{item.stcd} AND ID = #{item.id}
+        </foreach>
+        ;END;
+    </update>
+
+    <update id="deleteCustom">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            UPDATE ST_COSST_B SET CUSTOM = 0
+            WHERE STCD = #{item.stcd} AND ID = #{item.id}
+        </foreach>
+        ;END;
+    </update>
+
+</mapper>

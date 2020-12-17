@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.YcdbJktjDao">
+    <select id="getSttp" resultType="String">
+        SELECT STTP FROM ST_STCONFIG WHERE STCD = #{stcd}
+    </select>
+
+    <select id="getStation_13" resultType="java.util.Map">
+        SELECT r.DRP AS Z,v.STCD,v.VOLGATE AS V,v.TM
+        FROM ST_VOLGATE_R v
+        FULL JOIN ST_PPTN_R5 r ON r.stcd=v.stcd AND r.TM=v.TM
+        WHERE v.TM = #{time} AND v.stcd IN (#{id13Stcd})
+    </select>
+
+    <select id="getStation_24" resultType="java.util.Map">
+        SELECT r.RZ AS Z,v.STCD,v.VOLGATE AS V,v.TM
+        FROM ST_VOLGATE_R
+        WHERE 1 = 2
+        <if test="idrrStcd!=null and idrrStcd!=''">
+            UNION ALL
+            SELECT r.RZ AS Z,v.STCD,v.VOLGATE AS V,v.TM
+            FROM ST_VOLGATE_R v FULL JOIN ST_RSVR_R5 r ON r.stcd=v.stcd AND r.TM=v.Tm
+            WHERE v.TM = #{time} AND v.stcd IN (#{idrrStcd})
+        </if>
+        <if test="idddStcd!=null and idddStcd!=''">
+            UNION ALL
+            SELECT r.UPZ AS Z,v.STCD,v.VOLGATE AS V,v.TM
+            FROM ST_VOLGATE_R v FULL JOIN ST_WAS_R5 r ON r.stcd=v.stcd AND r.TM=v.Tm
+            WHERE v.TM = #{time} AND v.stcd IN (#{idddStcd})
+        </if>
+        <if test="iddpStcd!=null and iddpStcd!=''">
+            UNION ALL
+            SELECT r.PPUPZ AS Z,v.STCD,v.VOLGATE AS V,v.TM
+            FROM ST_VOLGATE_R v FULL JOIN ST_PUMP_R5 r ON r.stcd=v.stcd AND r.TM=v.Tm
+            WHERE v.TM = #{time} AND v.stcd IN (#{iddpStcd})
+        </if>
+        <if test="idppStcd!=null and idppStcd!=''">
+            UNION ALL
+            SELECT r.Z AS Z,v.STCD,v.VOLGATE AS V,v.TM
+            FROM ST_VOLGATE_R v FULL JOIN ST_RIVER_R5 r ON r.stcd=v.stcd AND r.TM=v.Tm
+            WHERE v.TM = #{time} AND v.stcd IN (#{idppStcd})
+        </if>
+    </select>
+</mapper>

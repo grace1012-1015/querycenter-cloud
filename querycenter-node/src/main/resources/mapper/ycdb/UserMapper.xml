@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.management.UserDao">
+    <resultMap id="result_st_user" type="com.goldwater.querycenter.entity.management.User">
+        <result property="userCode" column="UCODE"/>
+        <result property="userPwd" column="UPWD"/>
+        <result property="userCompany" column="UCOMPANY"/>
+        <result property="userCbrief" column="UCBRIEF"/>
+        <result property="userCtel" column="UCTEL"/>
+        <result property="userName" column="UNAME"/>
+        <result property="userEmail" column="UEMAIL"/>
+        <result property="userPhone" column="UPHONE"/>
+        <result property="userKey" column="UKEY"/>
+        <result property="userState" column="USTATE"/>
+        <result property="userRole" column="UROLE"/>
+    </resultMap>
+
+    <resultMap id="result_st_user_vo" type="com.goldwater.querycenter.entity.management.vo.UserVo">
+        <result property="userCode" column="UCODE"/>
+        <result property="userPwd" column="UPWD"/>
+        <result property="userCompany" column="UCOMPANY"/>
+        <result property="userCbrief" column="UCBRIEF"/>
+        <result property="userCtel" column="UCTEL"/>
+        <result property="userName" column="UNAME"/>
+        <result property="userEmail" column="UEMAIL"/>
+        <result property="userPhone" column="UPHONE"/>
+        <result property="userState" column="USTATE"/>
+        <result property="priviligeName" column="PNAME"/>
+        <result property="priviligeId" column="PRIVILEGE_ID"/>
+    </resultMap>
+
+    <select id="getUserList" resultMap="result_st_user_vo">
+        SELECT U.UCODE,U.UNAME,U.UEMAIL,U.UPWD,U.UCTEL,U.USTATE,U.UCOMPANY,U.UPHONE,P.LEVEL,P.NAME AS PNAME,P.PRIVILEGE_ID,U.UCBRIEF FROM ST_USER U LEFT JOIN
+        ST_USER_PRIVILEGE PU ON U.UCODE=PU.UCODE LEFT JOIN ST_PRIVILIGES P ON PU.PRIVILEGE_ID=P.PRIVILEGE_ID
+        WHERE (1 = 1)
+        <if test="uName!=null and uName!=''">
+            AND U.UNAME LIKE '%' + #{uName} + '%'
+        </if>
+        <if test="uCode!=null and uCode!=''">
+            AND U.UCODE LIKE '%' + #{uCode} + '%'
+        </if>
+        <if test="uStateQuery!=null and uStateQuery!=''">
+            #{uStateQuery}
+        </if>
+        <if test="uRoleQuery!=null and uRoleQuery!=''">
+            #{uRoleQuery}
+        </if>
+    </select>
+
+    <select id="getUser" resultMap="result_st_user">
+        SELECT UCODE,UPWD,UCOMPANY,UCBRIEF,UCTEL,UNAME,UEMAIL,UPHONE,UKEY,USTATE,UROLE FROM ST_USER T
+        WHERE (1 = 1)
+        <if test="uCode!=null and uCode!=''">
+            AND UCODE = #{uCode}
+        </if>
+    </select>
+
+    <update id="updateStatus">
+        UPDATE ST_USER SET USTATE = #{uState}
+        WHERE 1=1
+        <if test="uCodeQuery!=null and uCodeQuery!=''">
+            #{uCodeQuery}
+        </if>
+    </update>
+
+    <delete id="deleteUsers" >
+        DELETE FROM ST_USER
+        WHERE UROLE='1'
+        <if test="uCodeQuery!=null and uCodeQuery!=''">
+            #{uCodeQuery}
+        </if>
+    </delete>
+</mapper>

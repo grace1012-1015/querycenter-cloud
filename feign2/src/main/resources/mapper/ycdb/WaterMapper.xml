@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.ycdb.ruku.WaterDao">
+    <resultMap id="result_RiverR5" type="com.goldwater.querycenter.entity.ruku.vo.RiverR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="z" column="Z"/>
+        <result property="q" column="Q"/>
+        <result property="xsa" column="XSA"/>
+        <result property="xsavv" column="XSAVV"/>
+        <result property="xsmxv" column="XSMXV"/>
+        <result property="flwchrcd" column="FLWCHRCD"/>
+        <result property="wptn" column="WPTN"/>
+        <result property="msqmt" column="MSQMT"/>
+        <result property="xsamt" column="MSAMT"/>
+        <result property="xsvmt" column="MSVMT"/>
+    </resultMap>
+
+    <resultMap id="result_RsvrR5" type="com.goldwater.querycenter.entity.ruku.vo.RsvrR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="rz" column="RZ"/>
+        <result property="inq" column="INQ"/>
+        <result property="w" column="W"/>
+        <result property="otq" column="OTQ"/>
+        <result property="rwchrcd" column="RWCHRCD"/>
+        <result property="rwptn" column="RWPTN"/>
+        <result property="inqdr" column="INQDR"/>
+        <result property="msqmt" column="MSQMT"/>
+    </resultMap>
+
+    <resultMap id="result_WasR5" type="com.goldwater.querycenter.entity.ruku.vo.WasR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="upz" column="UPZ"/>
+        <result property="dwz" column="DWZ"/>
+        <result property="tgtq" column="TGTQ"/>
+        <result property="swchrcd" column="SWCHRCD"/>
+        <result property="supwptn" column="SUPWPTN"/>
+        <result property="sdwwptn" column="SDWWPTN"/>
+        <result property="msqmt" column="MSQMT"/>
+    </resultMap>
+
+    <resultMap id="result_PumpR5" type="com.goldwater.querycenter.entity.ruku.vo.PumpR5Vo">
+        <result property="stcd" column="STCD"/>
+        <result property="stnm" column="STNM"/>
+        <result property="tm" column="TM"/>
+        <result property="ppupz" column="PPUPZ"/>
+        <result property="ppdwz" column="PPDWZ"/>
+        <result property="pmpq" column="PMPQ"/>
+        <result property="ppwchrcd" column="PPWCHRCD"/>
+        <result property="ppupwptn" column="PPUPWPTN"/>
+        <result property="ppdwwptn" column="PPDWWPTN"/>
+        <result property="msqmt" column="MSQMT"/>
+    </resultMap>
+
+    <select id="queryRiver_R5_Level3" resultMap="result_RiverR5">
+        SELECT A.STCD,B.STNM,A.Z,CONVERT(varchar(100), A.TM, 20) TM,A.Q,A.XSA,A.XSAVV,A.XSMXV,A.FLWCHRCD,
+        A.WPTN,A.MSQMT,A.MSAMT,A.MSVMT
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_RIVER_R5 A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryRiver_R5" resultMap="result_RiverR5">
+        SELECT A.STCD,B.STNM,A.Z,CONVERT(varchar(100), A.TM, 20) TM,A.Q,A.XSA,A.XSAVV,A.XSMXV,A.FLWCHRCD,
+        A.WPTN,A.MSQMT,A.MSAMT,A.MSVMT
+        FROM ST_RIVER_R5 A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryRsvr_R5_Level3" resultMap="result_RsvrR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.RZ,A.INQ,A.W
+        ,A.OTQ,A.RWCHRCD,A.RWPTN,A.INQDR,A.MSQMT
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_RSVR_R5 A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryRsvr_R5" resultMap="result_RsvrR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.RZ,A.INQ,A.W
+        ,A.OTQ,A.RWCHRCD,A.RWPTN,A.INQDR,A.MSQMT
+        FROM ST_RSVR_R5 A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryWas_R5_Level3" resultMap="result_WasR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.UPZ,A.DWZ,A.TGTQ,A.SWCHRCD,
+        A.SUPWPTN,A.SDWWPTN,A.MSQMT
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_WAS_R5 A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryWas_R5" resultMap="result_WasR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.UPZ,A.DWZ,A.TGTQ,A.SWCHRCD,
+        A.SUPWPTN,A.SDWWPTN,A.MSQMT
+        FROM ST_WAS_R5 A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryPump_R5_Level3" resultMap="result_PumpR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.PPUPZ,A.PPDWZ,A.PMPQ,A.PPWCHRCD,
+        A.PPUPWPTN,A.PPDWWPTN,A.MSQMT
+        FROM ST_PRIVILEGE_STCDS P LEFT JOIN ST_WAS_R5 A ON P.STCD=A.STCD
+        LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE P.PRIVILEGE_ID = #{priviligeId}
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+
+    <select id="queryPump_R5" resultMap="result_PumpR5">
+        SELECT A.STCD,B.STNM,CONVERT(varchar(100), A.TM, 20) TM,A.PPUPZ,A.PPDWZ,A.PMPQ,A.PPWCHRCD,
+        A.PPUPWPTN,A.PPDWWPTN,A.MSQMT
+        FROM ST_PUMP_R5 A LEFT JOIN (SELECT STCD8 ,MAX(STNM) STNM FROM  RTUEX.DBO.RTU_STATION GROUP BY STCD8 ) B ON A.stcd=B.stcd8
+        WHERE 1=1
+        <if test="stdm!=null and stdm!=''">
+            AND A.STCD = #{stdm}
+        </if>
+        <if test="startTm!=null and startTm!=''">
+            AND A.TM >= #{startTm}
+        </if>
+        <if test="endTm!=null and endTm!=''">
+            AND A.TM &lt;= #{endTm}
+        </if>
+    </select>
+</mapper>

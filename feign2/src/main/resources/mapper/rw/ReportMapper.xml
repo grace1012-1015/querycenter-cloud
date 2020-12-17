@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goldwater.querycenter.dao.rw.ruku.ReportDao">
+    <resultMap id="result_ext_rptconfmeta" type="com.goldwater.querycenter.entity.ruku.ReportConfigMetaData">
+        <result property="fieldName" column="FIELDNAME"/>
+        <result property="mid" column="MID"/>
+    </resultMap>
+
+    <select id="getReportConfigMetaData" resultMap="result_ext_rptconfmeta">
+        SELECT DISTINCT T.FIELDNAME ,T.MID FROM EXT_REPORTCONFIG_METADATA T
+        WHERE (1 = 1)
+        <if test="rid!=null and rid!=''">
+            AND rid = #{rid}
+        </if>
+    </select>
+
+    <select id="getSqjbList" parameterType="java.util.List" resultType="java.util.HashMap">
+        SELECT tt.* ,rownum FROM
+        (
+            SELECT MAX(t.sortvalue) sortvalue
+            <foreach collection="list" item="meta" separator="">
+                , max(case to_char(t.vmid) when #{meta.mid} then Fieldvalue end #{meta.fieldName}
+            </foreach>
+            , t.IDENTIFY from (select r.fieldname,d.* from EXT_REPORTCONFIG_METADATA r,EXT_REPORTCONFIG_VALUE d  where  d.vmid=r.mid and r.rid = #{rid}
+        ) t group by  t.IDENTIFY  order by  sortvalue asc ) tt
+    </select>
+
+    <select id="getMaxSortValue" resultType="int">
+        SELECT NVL(MAX( sortvalue),0) sortvalue FROM EXT_REPORTCONFIG_VALUE
+        WHERE vmid = #{mid}
+    </select>
+
+    <insert id="addSqjb" parameterType="java.util.List">
+        BEGIN
+        <foreach collection="list" item="meta" separator="">
+          INSERT INTO EXT_REPORTCONFIG_VALUE  (vmid, fieldvalue, sortvalue, identify)
+          VALUES (#{mata.mid}, #{mata.fieldValue}, #{mata.sortValue}, #{mata.identify})
+        </foreach>
+        ;END;
+    </insert>
+
+    <delete id="deleteSqjb">
+        BEGIN
+        <foreach collection="list" item="item" separator=";">
+            DELETE FROM EXT_REPORTCONFIG_VALUE
+            WHERE vmid = #{item.mid} AND identify = #{item.identify}
+        </foreach>
+        ;END;
+    </delete>
+</mapper>
